@@ -1,48 +1,52 @@
 """
-Database Schemas
+Database Schemas for Handy Reparatur 2GO
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model maps to a MongoDB collection (lowercased class name).
 """
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List
 
-from pydantic import BaseModel, Field
-from typing import Optional
+class Brand(BaseModel):
+    name: str = Field(..., description="Brand name e.g. Apple, Samsung, Xiaomi, Google")
+    slug: str = Field(..., description="URL-friendly identifier")
+    logo_url: Optional[str] = Field(None, description="Public logo URL")
 
-# Example schemas (replace with your own):
+class DeviceModel(BaseModel):
+    brand: str = Field(..., description="Brand slug this model belongs to")
+    name: str = Field(..., description="Model display name e.g. iPhone 13 Pro")
+    code: str = Field(..., description="Model code/slug e.g. iphone-13-pro")
+    category: str = Field(..., description="phone | tablet | smartwatch | other")
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+class RepairPartPrice(BaseModel):
+    brand: str = Field(..., description="Brand slug")
+    model: str = Field(..., description="Model code/slug")
+    part: str = Field(..., description="Repair part name e.g. Display, Akku, Kamera")
+    price_eur: float = Field(..., ge=0, description="Price in EUR")
+    duration_min: int = Field(60, ge=5, le=480, description="Approx. duration in minutes")
+    warranty_months: int = Field(6, ge=0, le=36, description="Warranty period in months")
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class Location(BaseModel):
+    name: str
+    address: str
+    city: str
+    postal_code: str
+    phone: str
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    hours: Optional[str] = Field(None, description="Opening hours text")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class Review(BaseModel):
+    author: str
+    rating: int = Field(..., ge=1, le=5)
+    text: str
+    source: str = Field("Google", description="Review source platform")
+    profile_url: Optional[str] = None
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Inquiry(BaseModel):
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    message: str
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    part: Optional[str] = None
